@@ -1,0 +1,8 @@
+{
+  "name": "Webpol CNP",
+  "description": "Intranet de gestión de personal del Cuerpo Nacional de Policía (CNP) en Cataluña.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,863 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Webpol CNP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap">
+<style>
+/* Layout: acceso a dos columnas (emblema y estado / formulario); panel interno en una columna con barra superior fija; marca de agua al pie. */
+:root {
+  --bg: #07122b;
+  --surface: #0d1f45;
+  --surface-2: #132a5a;
+  --field: #081735;
+  --line: #243a6b;
+  --text: #e8ecf6;
+  --muted: #9fb0d2;
+  --gold: #c9a24a;
+  --gold-soft: #e6cb82;
+  --on-gold: #1c1503;
+  --ok: #3fae7a;
+  --on-ok: #04140c;
+  --bad: #e0605e;
+  --on-bad: #1b0605;
+  --warn: #e0b04a;
+  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#app { flex: 1; display: flex; flex-direction: column; }
+h1, h2, h3, p { margin: 0; }
+h1, h2 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; }
+button, input, select { font: inherit; color: inherit; }
+.mono { font-family: var(--font-data); }
+
+/* selector de idioma */
+.lang { display: inline-flex; gap: 4px; padding: 3px; background: var(--field); border: 1px solid var(--line); border-radius: 9px; }
+.lang-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 0.84rem; font-weight: 500; cursor: pointer; }
+.lang-btn[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
+.lang-btn:hover:not([aria-pressed="true"]) { color: var(--text); }
+.flag { position: relative; display: block; width: 27px; height: 18px; border-radius: 3px; overflow: hidden; flex: none; box-shadow: 0 0 0 1px var(--line); }
+.flag svg { display: block; width: 100%; height: 100%; }
+.flag::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0.14)); }
+
+/* acceso */
+.auth { flex: 1; width: 100%; display: grid; grid-template-columns: minmax(260px, 5fr) minmax(300px, 6fr); max-width: 1100px; margin: 0 auto; }
+.brand { display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 40px 40px 40px 8px; border-right: 1px solid var(--line); min-width: 0; }
+.emblem { display: block; width: 128px; height: auto; max-width: 100%; }
+.kicker { font-size: 0.74rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+.brand h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.2; }
+.brand h1 .gold { display: block; color: var(--gold); font-size: 1.35em; letter-spacing: 0.02em; }
+.brand p { color: var(--muted); max-width: 34ch; }
+.rule { width: 52px; height: 3px; background: var(--gold); }
+.panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 32px 0 32px 40px; min-width: 0; }
+.panel .lang { align-self: flex-end; max-width: 440px; }
+.card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 26px; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 22px; background: var(--field); border-radius: 9px; }
+.tabs button { padding: 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-weight: 600; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); }
+
+form { display: grid; gap: 15px; }
+label { display: grid; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+input, select { width: 100%; padding: 10px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--field); color: var(--text); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.hint { font-size: 0.78rem; color: var(--muted); }
+
+.btn { padding: 11px 16px; border: 0; border-radius: 7px; background: var(--gold); color: var(--on-gold); font-weight: 600; cursor: pointer; }
+.btn:hover:not(:disabled) { background: var(--gold-soft); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn.ghost:hover:not(:disabled) { background: var(--surface-2); }
+.btn.ok { background: var(--ok); color: var(--on-ok); }
+.btn.bad { background: var(--bad); color: var(--on-bad); }
+.btn.small { padding: 7px 12px; font-size: 0.86rem; }
+
+.msg { padding: 10px 12px; border-radius: 7px; font-size: 0.88rem; border: 1px solid var(--line); background: var(--field); }
+.msg.error { border-color: var(--bad); }
+.msg.warn { border-color: var(--warn); }
+.msg.success { border-color: var(--ok); }
+.status-line { font-size: 0.82rem; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
+.dot.on { background: var(--ok); }
+
+.done { display: grid; gap: 14px; text-align: center; }
+.done p { color: var(--muted); }
+
+/* panel interno */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.id .emblem { width: 36px; flex: none; }
+.id .name { font-family: var(--font-display); font-size: 1rem; overflow-wrap: anywhere; }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wrap { width: 100%; max-width: 1000px; margin: 0 auto; padding-block: 28px 40px; display: grid; gap: 22px; align-content: start; }
+.section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px; min-width: 0; }
+.section h2 { font-size: 1.15rem; margin-bottom: 4px; }
+.lead { color: var(--muted); font-size: 0.88rem; margin-bottom: 16px; }
+.profile { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.field { padding: 11px 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--field); min-width: 0; }
+.field .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.field .v { margin-top: 2px; font-weight: 500; overflow-wrap: anywhere; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; border: 1px solid var(--gold); color: var(--gold-soft); }
+.list { display: grid; gap: 10px; }
+.req { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--field); }
+.req .head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.req .who { font-weight: 600; overflow-wrap: anywhere; }
+.req .meta { display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--muted); font-size: 0.84rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.deny-box { display: grid; gap: 8px; width: 100%; }
+.empty { color: var(--muted); padding: 16px; text-align: center; border: 1px dashed var(--line); border-radius: 9px; }
+.soon { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.soon div { padding: 13px; border: 1px dashed var(--line); border-radius: 9px; color: var(--muted); font-size: 0.88rem; }
+.splash { flex: 1; min-height: 60vh; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; color: var(--muted); }
+.splash .emblem { width: 72px; }
+
+.hero h2 { font-size: 1.45rem; }
+.hero .lead { margin: 4px 0 0; }
+.back { justify-self: start; }
+.modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.tile { display: grid; gap: 8px; align-content: start; justify-items: start; min-height: 150px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); text-align: left; min-width: 0; }
+button.tile { cursor: pointer; border-color: var(--gold); }
+button.tile:hover { background: var(--surface-2); }
+.tile .ico { width: 32px; height: 32px; color: var(--gold); margin-bottom: 6px; }
+.tile .t-name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+.tile .t-desc { color: var(--muted); font-size: 0.86rem; }
+.tile.off { border-style: dashed; background: transparent; }
+.tile.off .ico, .tile.off .t-name { color: var(--muted); }
+.tile.off .badge { border-color: var(--line); color: var(--muted); margin-top: auto; }
+
+.pw { position: relative; display: block; }
+.pw input { padding-right: 46px; }
+.pw-btn { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.pw-btn:hover { color: var(--text); background: var(--surface-2); }
+.pw-btn .ico { width: 20px; height: 20px; }
+
+.portal { display: grid; gap: 22px; }
+.portal .profile { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.hero-card { display: grid; grid-template-columns: minmax(220px, 360px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.hero-card:not(:has(.portrait)) { grid-template-columns: minmax(0, 1fr); }
+.portrait { margin: 0; display: grid; gap: 8px; min-width: 0; }
+.portrait img { display: block; width: 100%; height: auto; border-radius: 10px; border: 2px solid var(--gold); background: var(--field); }
+.portrait figcaption { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.hero-data { display: grid; gap: 14px; min-width: 0; }
+.hero-data h2 { margin: 0; }
+.field.wide { grid-column: 1 / -1; }
+.field.sub { margin-left: 18px; border-style: dashed; }
+@media (max-width: 720px) { .hero-card { grid-template-columns: minmax(0, 1fr); } .field.sub { margin-left: 0; } }
+
+button.com-card { display: grid; gap: 8px; width: 100%; padding: 20px; border: 1px solid var(--gold); border-radius: 12px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; min-width: 0; }
+button.com-card:hover { background: var(--surface-2); }
+.com-card h3 { margin: 0; font-family: var(--font-display); font-size: 1.1rem; line-height: 1.3; text-wrap: balance; }
+.com-card .badge { justify-self: start; margin-top: 4px; }
+.com-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font-size: 0.82rem; color: var(--muted); }
+.com-snip { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: 70ch; }
+.com-article { padding: 28px; }
+.com-article h2 { margin: 6px 0 10px; font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.25; }
+.com-article .com-meta { padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.com-text { display: grid; gap: 14px; max-width: 68ch; line-height: 1.7; }
+.com-text p { margin: 0; }
+.com-text ul { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; }
+.com-text strong { color: var(--gold-soft); font-weight: 600; }
+.com-sign { margin-top: 6px !important; font-weight: 600; }
+@media (max-width: 720px) { .com-article { padding: 20px; } }
+
+/* marca de agua */
+.mark { padding: 14px 0 max(14px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 0.7rem; letter-spacing: 0.08em; color: var(--muted); opacity: 0.6; }
+
+@media (max-width: 820px) {
+  .auth { grid-template-columns: 1fr; }
+  .brand { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; border-right: 0; border-bottom: 1px solid var(--line); padding: 20px 0; }
+  .brand p, .brand .rule { display: none; }
+  .brand .emblem { width: 52px; }
+  .brand .titles { display: grid; gap: 4px; min-width: 0; }
+  .brand h1 { font-size: 1.25rem; }
+  .panel { padding: 20px 0; }
+  .panel .lang { align-self: center; }
+  .card { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div id="app"></div>
+<footer class="mark" id="mark"></footer>
+
+<script>
+'use strict';
+/* ---------------- Rangos (el valor guardado es siempre el nombre en español) ---------------- */
+const GROUPS = [
+  { name: 'Cargos Superiores', tier: 4, ranks: ['Director Adjunto Operativo', 'Subdirector General de la Policía', 'Jefe de División - Comisario General de Seguridad Ciudadana', 'Jefe Superior de Cataluña'] },
+  { name: 'Escala Superior', tier: 3, ranks: ['Comisario Principal de la Policía Federada', 'Comisario Principal de Territorio Provincial', 'Comisario', 'Comisario 2°'] },
+  { name: 'Escala Ejecutiva', tier: 2, ranks: ['Inspector Jefe', 'Inspector', 'Inspector en Prácticas', 'Inspector Alumno 2° Año', 'Inspector Alumno 1° Año'] },
+  { name: 'Escala Subinspección', tier: 1, ranks: ['Subinspector'] },
+  { name: 'Escala Básica', tier: 0, ranks: ['Oficial de Policía', 'Policía', 'Policía en Prácticas'] },
+];
+const CA_NAMES = {
+  'Cargos Superiores': 'Càrrecs Superiors', 'Escala Superior': 'Escala Superior', 'Escala Ejecutiva': 'Escala Executiva',
+  'Escala Subinspección': 'Escala de Subinspecció', 'Escala Básica': 'Escala Bàsica',
+  'Director Adjunto Operativo': 'Director Adjunt Operatiu', 'Subdirector General de la Policía': 'Subdirector General de la Policia',
+  'Jefe de División - Comisario General de Seguridad Ciudadana': 'Cap de Divisió - Comissari General de Seguretat Ciutadana',
+  'Jefe Superior de Cataluña': 'Cap Superior de Catalunya',
+  'Comisario Principal de la Policía Federada': 'Comissari Principal de la Policia Federada',
+  'Comisario Principal de Territorio Provincial': 'Comissari Principal de Territori Provincial',
+  'Comisario': 'Comissari', 'Comisario 2°': 'Comissari 2n',
+  'Inspector Jefe': 'Inspector Cap', 'Inspector': 'Inspector', 'Inspector en Prácticas': 'Inspector en Pràctiques',
+  'Inspector Alumno 2° Año': 'Inspector Alumne 2n Any', 'Inspector Alumno 1° Año': 'Inspector Alumne 1r Any',
+  'Subinspector': 'Sotsinspector',
+  'Oficial de Policía': 'Oficial de Policia', 'Policía': 'Policia', 'Policía en Prácticas': 'Policia en Pràctiques',
+};
+const TIER = new Map();
+const ESCALA = new Map();
+for (const g of GROUPS) for (const r of g.ranks) { TIER.set(r, g.tier); ESCALA.set(r, g.name); }
+const isApprover = (rank) => (TIER.get(rank) ?? -1) >= 3;
+function canResolve(approver, applicant) {
+  const a = TIER.get(approver) ?? -1, b = TIER.get(applicant) ?? -1;
+  if (a === 4) return true;
+  if (a === 3) return b < 3;
+  return false;
+}
+
+/* ---------------- Idiomas ---------------- */
+const T = {
+  es: {
+    state: 'Estado Federado de Cataluña', corps: 'Cuerpo Nacional de Policía',
+    titleLead: 'Webpol', titleRest: 'del Cuerpo Nacional de Policía (CNP) en Cataluña',
+    brandP: 'Intranet de gestión de personal. Acceso exclusivo para miembros del cuerpo.',
+    emblemAlt: 'Emblema del Cuerpo Nacional de Policía', langLabel: 'Idioma',
+    tabLogin: 'Iniciar sesión', tabRegister: 'Registrarse',
+    lblPlaca: 'Número identificativo (placa)', lblPass: 'Contraseña', lblPass2: 'Repetir contraseña',
+    lblDni: 'DNI', lblNombres: 'Nombres completos', lblRango: 'Rango', phRango: 'Selecciona tu rango…',
+    btnEnter: 'Entrar', btnRegister: 'Solicitar registro',
+    hintDni: 'Usa el DNI ficticio de tu personaje, no datos reales.',
+    hintPass: 'Mínimo 8 caracteres. No uses una contraseña real tuya.',
+    connNoDb: 'Sin conexión con la base de datos. Abre la página dentro de Claude.',
+    connOk: 'Conectado a la base de datos del cuerpo',
+    connOffline: 'No se alcanza la base de datos todavía. Reintentando.',
+    connWait: 'Conectando con la base de datos…',
+    errLogin: 'Número identificativo o contraseña incorrectos.',
+    errPending: 'Tu registro todavía está pendiente de aprobación por un mando.',
+    errDenied: 'Tu registro fue denegado.', motive: ' Motivo: ', retry: ' Puedes volver a registrarte con datos correctos.',
+    errLoginGeneric: 'No se pudo iniciar sesión.',
+    readOnly: 'Tu cuenta de Claude solo puede leer esta página. Pide al propietario que te dé acceso de colaborador para poder registrarte.',
+    vDni: 'El DNI debe tener 8 números y una letra (ej. 12345678Z).',
+    vNombres: 'Introduce tus nombres completos (solo letras, 3 a 100 caracteres).',
+    vPlaca: 'El número identificativo debe tener entre 3 y 10 letras o números.',
+    vRango: 'Selecciona un rango válido.', vPass: 'La contraseña debe tener entre 8 y 128 caracteres.',
+    vPass2: 'Las contraseñas no coinciden.', vDup: 'Ya existe un registro con ese DNI o número identificativo.',
+    noWrite: 'No tienes permiso para escribir en esta página. Pide al propietario acceso de colaborador.',
+    errRegister: 'No se pudo enviar el registro.', errSave: 'No se pudo guardar el cambio.',
+    sentTitle: 'Solicitud enviada',
+    sentText: 'Tu registro está pendiente de aprobación por la Escala Superior o los Cargos Superiores. Cuando sea aprobado podrás iniciar sesión con tu número identificativo y tu contraseña.',
+    showPw: 'Mostrar contraseña', hidePw: 'Ocultar contraseña',
+    comTitle: 'Comunicados', comDesc: 'Comunicados oficiales del cuerpo.', comLoading: 'Cargando comunicados…', comEmpty: 'No hay comunicados publicados.',
+    comErr: 'No se pudieron leer los comunicados. Inténtalo de nuevo en unos segundos.', comBack: '← Volver a comunicados', comOfficial: 'Comunicado oficial', comRead: 'Leer comunicado', comBy: 'Firmado por',
+    portalLoading: 'Cargando tu portal…', portalNone: 'Tu portal todavía no ha sido creado. Lo gestionan los Cargos Superiores o los administradores.',
+    portalErr: 'No se pudo leer tu portal. Inténtalo de nuevo en unos segundos.',
+    portraitCap: 'Retrato policial oficial', portraitAlt: 'Retrato policial oficial del agente',
+    secMain: 'Apartado principal', secDisc: 'Apartado disciplinario', secJud: 'Apartado judicial', secPers: 'Apartado personal',
+    yes: 'Sí', no: 'No', lLeves: 'leves', lGraves: 'graves', lAsc: 'ascensos', lDesc: 'descensos',
+    rAgente: 'Agente registrado', rPlaca: 'Número de placa asignado', rRango: 'Rango que ostenta',
+    rIngreso: 'Fecha de ingreso al Cuerpo Nacional de Policía', rUnidades: 'Unidades a las que pertenece',
+    rWarn: 'Advertencias vigentes en el expediente', rAsc: 'Número de ascensos registrados', rDesc: 'Número de descensos registrados',
+    rTraspaso: '¿Ha realizado traspasos de otra corporación?', rJunta: '¿Pertenece a la junta superior del Cuerpo Nacional de Policía?',
+    rSuperv: '¿Se ostenta de unidad bajo supervisión?', rExped: '¿Se le adjuntan expedientes disciplinarios?', rGravedad: 'En caso de tenerlos, ¿de qué gravedad?',
+    rDemandado: '¿Ha sido demandado o denunciado dicho agente?', rCausas: '¿Ostenta causas judiciales abiertas en su contra?',
+    rEstado: 'Estado legal', rEdad: 'Edad', rNacimiento: 'Año de nacimiento', rDniNum: 'Número de D.N.I.',
+    toLogin: 'Ir a iniciar sesión', logout: 'Cerrar sesión',
+    profile: 'Mi perfil', profileLead: 'Tus datos de servicio.', fName: 'Nombres', fDni: 'DNI', fPlaca: 'Número identificativo', fRank: 'Rango', fScale: 'Escala',
+    pendTitle: 'Registros pendientes', pendLead: 'Aprueba o deniega las solicitudes de ingreso a la intranet.', pendEmpty: 'No hay registros pendientes.',
+    approve: 'Aprobar', deny: 'Denegar', confirmDeny: 'Confirmar denegación', cancel: 'Cancelar',
+    motivePh: 'Motivo (opcional)', motiveAria: 'Motivo de la denegación',
+    placa: 'Placa', dni: 'DNI', requested: 'Solicitado', okApprove: 'Registro aprobado.', okDeny: 'Registro denegado.',
+    soonTitle: 'Próximamente', soon1: 'Gestión de personal', soon2: 'Unidades y destinos', soon3: 'Historial y sanciones', soon4: 'Comunicados',
+    homeTitle: 'Interfaz de la Webpol', homeLead: 'Selecciona un módulo para continuar.',
+    portalTitle: 'Portal del Funcionario', portalDesc: 'Tu perfil y tus datos de servicio.', portalSoon: 'Aquí estará tu perfil. Esta sección está en preparación.', back: '← Volver a la Webpol',
+    splash: 'Conectando con la intranet…', mark: 'Fines de roleplay · Spanish Barcelona Roleplay', noCrypto: 'Tu navegador no permite cifrar contraseñas aquí.',
+  },
+  ca: {
+    state: 'Estat Federat de Catalunya', corps: 'Cos Nacional de Policia',
+    titleLead: 'Webpol', titleRest: 'del Cos Nacional de Policia (CNP) a Catalunya',
+    brandP: 'Intranet de gestió de personal. Accés exclusiu per a membres del cos.',
+    emblemAlt: 'Emblema del Cos Nacional de Policia', langLabel: 'Idioma',
+    tabLogin: 'Inicia la sessió', tabRegister: 'Registra’t',
+    lblPlaca: 'Número identificatiu (placa)', lblPass: 'Contrasenya', lblPass2: 'Repeteix la contrasenya',
+    lblDni: 'DNI', lblNombres: 'Noms complets', lblRango: 'Rang', phRango: 'Selecciona el teu rang…',
+    btnEnter: 'Entra', btnRegister: 'Sol·licita el registre',
+    hintDni: 'Fes servir el DNI fictici del teu personatge, no dades reals.',
+    hintPass: 'Mínim 8 caràcters. No facis servir cap contrasenya real teva.',
+    connNoDb: 'Sense connexió amb la base de dades. Obre la pàgina dins de Claude.',
+    connOk: 'Connectat a la base de dades del cos',
+    connOffline: 'Encara no s’arriba a la base de dades. Reintentant.',
+    connWait: 'Connectant amb la base de dades…',
+    errLogin: 'Número identificatiu o contrasenya incorrectes.',
+    errPending: 'El teu registre encara està pendent d’aprovació per part d’un comandament.',
+    errDenied: 'El teu registre ha estat denegat.', motive: ' Motiu: ', retry: ' Pots tornar a registrar-te amb dades correctes.',
+    errLoginGeneric: 'No s’ha pogut iniciar la sessió.',
+    readOnly: 'El teu compte de Claude només pot llegir aquesta pàgina. Demana al propietari que et doni accés de col·laborador per poder registrar-te.',
+    vDni: 'El DNI ha de tenir 8 números i una lletra (ex. 12345678Z).',
+    vNombres: 'Introdueix els teus noms complets (només lletres, de 3 a 100 caràcters).',
+    vPlaca: 'El número identificatiu ha de tenir entre 3 i 10 lletres o números.',
+    vRango: 'Selecciona un rang vàlid.', vPass: 'La contrasenya ha de tenir entre 8 i 128 caràcters.',
+    vPass2: 'Les contrasenyes no coincideixen.', vDup: 'Ja existeix un registre amb aquest DNI o número identificatiu.',
+    noWrite: 'No tens permís per escriure en aquesta pàgina. Demana al propietari accés de col·laborador.',
+    errRegister: 'No s’ha pogut enviar el registre.', errSave: 'No s’ha pogut desar el canvi.',
+    sentTitle: 'Sol·licitud enviada',
+    sentText: 'El teu registre està pendent d’aprovació per part de l’Escala Superior o dels Càrrecs Superiors. Quan sigui aprovat podràs iniciar la sessió amb el teu número identificatiu i la teva contrasenya.',
+    showPw: 'Mostra la contrasenya', hidePw: 'Amaga la contrasenya',
+    comTitle: 'Comunicats', comDesc: 'Comunicats oficials del cos.', comLoading: 'Carregant comunicats…', comEmpty: 'No hi ha comunicats publicats.',
+    comErr: 'No s\u2019han pogut llegir els comunicats. Torna-ho a provar d\u2019aquí a uns segons.', comBack: '← Torna als comunicats', comOfficial: 'Comunicat oficial', comRead: 'Llegeix el comunicat', comBy: 'Signat per',
+    portalLoading: 'Carregant el teu portal…', portalNone: 'El teu portal encara no ha estat creat. El gestionen els Càrrecs Superiors o els administradors.',
+    portalErr: 'No s\u2019ha pogut llegir el teu portal. Torna-ho a provar d\u2019aquí a uns segons.',
+    portraitCap: 'Retrat policial oficial', portraitAlt: 'Retrat policial oficial de l\u2019agent',
+    secMain: 'Apartat principal', secDisc: 'Apartat disciplinari', secJud: 'Apartat judicial', secPers: 'Apartat personal',
+    yes: 'Sí', no: 'No', lLeves: 'lleus', lGraves: 'greus', lAsc: 'ascensos', lDesc: 'descensos',
+    rAgente: 'Agent registrat', rPlaca: 'Número de placa assignat', rRango: 'Rang que ostenta',
+    rIngreso: 'Data d\u2019ingrés al Cos Nacional de Policia', rUnidades: 'Unitats a les quals pertany',
+    rWarn: 'Advertències vigents a l\u2019expedient', rAsc: 'Nombre d\u2019ascensos registrats', rDesc: 'Nombre de descensos registrats',
+    rTraspaso: 'Ha fet traspassos d\u2019un altre cos?', rJunta: 'Pertany a la junta superior del Cos Nacional de Policia?',
+    rSuperv: 'Es troba en una unitat sota supervisió?', rExped: 'Té expedients disciplinaris adjunts?', rGravedad: 'Si en té, de quina gravetat?',
+    rDemandado: 'Ha estat demandat o denunciat aquest agent?', rCausas: 'Té causes judicials obertes en contra seva?',
+    rEstado: 'Estat legal', rEdad: 'Edat', rNacimiento: 'Any de naixement', rDniNum: 'Número de D.N.I.',
+    toLogin: 'Ves a iniciar la sessió', logout: 'Tanca la sessió',
+    profile: 'El meu perfil', profileLead: 'Les teves dades de servei.', fName: 'Noms', fDni: 'DNI', fPlaca: 'Número identificatiu', fRank: 'Rang', fScale: 'Escala',
+    pendTitle: 'Registres pendents', pendLead: 'Aprova o denega les sol·licituds d’ingrés a la intranet.', pendEmpty: 'No hi ha registres pendents.',
+    approve: 'Aprova', deny: 'Denega', confirmDeny: 'Confirma la denegació', cancel: 'Cancel·la',
+    motivePh: 'Motiu (opcional)', motiveAria: 'Motiu de la denegació',
+    placa: 'Placa', dni: 'DNI', requested: 'Sol·licitat', okApprove: 'Registre aprovat.', okDeny: 'Registre denegat.',
+    soonTitle: 'Properament', soon1: 'Gestió de personal', soon2: 'Unitats i destinacions', soon3: 'Historial i sancions', soon4: 'Comunicats',
+    homeTitle: 'Interfície de la Webpol', homeLead: 'Selecciona un mòdul per continuar.',
+    portalTitle: 'Portal del Funcionari', portalDesc: 'El teu perfil i les teves dades de servei.', portalSoon: 'Aquí hi haurà el teu perfil. Aquesta secció està en preparació.', back: '← Torna a la Webpol',
+    splash: 'Connectant amb la intranet…', mark: 'Fins de roleplay · Spanish Barcelona Roleplay', noCrypto: 'El teu navegador no permet xifrar contrasenyes aquí.',
+  },
+};
+function pickLang() {
+  try { const l = localStorage.getItem('cnp.lang'); if (l === 'ca' || l === 'es') return l; } catch { /* sin almacenamiento */ }
+  return String(navigator.language || 'es').toLowerCase().startsWith('ca') ? 'ca' : 'es';
+}
+let LANG = pickLang();
+const t = (k) => T[LANG][k];
+const rankLabel = (name) => (LANG === 'ca' ? CA_NAMES[name] || name : name);
+const locale = () => (LANG === 'ca' ? 'ca-ES' : 'es-ES');
+
+/* ---------------- Utilidades ---------------- */
+const app = document.getElementById('app');
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v === false || v == null) continue;
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return n;
+}
+function svg(attrs, ...kids) {
+  const n = document.createElementNS(SVG_NS, 'svg');
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  n.append(...kids.flat());
+  return n;
+}
+function rect(x, y, w, h, fill) {
+  const r = document.createElementNS(SVG_NS, 'rect');
+  for (const [k, v] of Object.entries({ x, y, width: w, height: h, fill })) r.setAttribute(k, v);
+  return r;
+}
+/* Banderas: España (franjas 1:2:1) y la senyera (cuatro barras rojas sobre campo amarillo, nueve franjas iguales). */
+const flagES = () => el('span', { class: 'flag', 'aria-hidden': 'true' },
+  svg({ viewBox: '0 0 27 18' }, rect(0, 0, 27, 18, '#aa151b'), rect(0, 4.5, 27, 9, '#f1bf00')));
+const flagCA = () => el('span', { class: 'flag', 'aria-hidden': 'true' },
+  svg({ viewBox: '0 0 27 18' }, rect(0, 0, 27, 18, '#fcdd09'), [2, 6, 10, 14].map((y) => rect(0, y, 27, 2, '#da121a'))));
+const emblem = () => el('img', { class: 'emblem', src: 'emblema.png', alt: t('emblemAlt'), width: '128', height: '175' });
+
+function langSwitch() {
+  return el('div', { class: 'lang', role: 'group', 'aria-label': t('langLabel') },
+    [['es', flagES, 'Español'], ['ca', flagCA, 'Català']].map(([code, flag, label]) =>
+      el('button', { type: 'button', class: 'lang-btn', lang: code, 'aria-pressed': String(LANG === code), onclick: () => setLang(code) }, flag(), el('span', {}, label))));
+}
+function setLang(code) {
+  if (code === LANG) return;
+  LANG = code;
+  try { localStorage.setItem('cnp.lang', code); } catch { /* sin almacenamiento */ }
+  rerender();
+}
+function rerender() {
+  const saved = new Map();
+  app.querySelectorAll('input[id], select[id]').forEach((n) => saved.set(n.id, n.value));
+  S.view && S.view();
+  saved.forEach((v, id) => { const n = document.getElementById(id); if (n) n.value = v; });
+  syncChrome();
+}
+function syncChrome() {
+  document.documentElement.lang = LANG;
+  document.getElementById('mark').textContent = t('mark');
+}
+
+const fmtDate = (iso) => new Date(iso).toLocaleString(locale(), { dateStyle: 'medium', timeStyle: 'short' });
+const SESSION_KEY = 'cnp.placa';
+const store = {
+  get() { try { return sessionStorage.getItem(SESSION_KEY); } catch { return null; } },
+  set(v) { try { v ? sessionStorage.setItem(SESSION_KEY, v) : sessionStorage.removeItem(SESSION_KEY); } catch { /* sin almacenamiento */ } },
+};
+
+/* ---------------- Contraseñas (PBKDF2 en el navegador) ---------------- */
+const enc = new TextEncoder();
+const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+async function derive(password, salt) {
+  if (!(window.crypto && crypto.subtle)) throw new Error(t('noCrypto'));
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 150000 }, key, 256));
+}
+
+/* ---------------- Estado y base de datos compartida ---------------- */
+const S = { db: null, rows: [], loaded: false, offline: false, noDb: false, canWrite: null, onData: null, view: null, page: 'home', isOwner: false, portals: {}, portalLoaded: false, portalErr: false, coms: [], comLoaded: false, comErr: false, openCom: null };
+const rowByPlaca = (p) => S.rows.find((r) => r.placa === p);
+const personalRef = (placa) => S.db.doc('personal/' + placa);
+
+async function connect() {
+  const timer = setTimeout(() => { if (!S.loaded) { S.offline = true; S.onData && S.onData(); } }, 10000);
+  S.db = await window.claude.use('db');
+  if (!S.db) { clearTimeout(timer); S.offline = true; S.noDb = true; S.onData && S.onData(); return; }
+  try { const user = await window.claude.use('user'); if (user) { S.canWrite = await user.can('data.write'); S.isOwner = await user.isOwner(); } } catch { /* sin dato */ }
+  S.db.collection('personal').onSnapshot(
+    (snap) => {
+      S.rows = snap.docs.map((d) => ({ ...d.data(), placa: d.id }));
+      if (!snap.metadata.fromCache) { S.loaded = true; S.offline = false; clearTimeout(timer); }
+      S.onData && S.onData();
+    },
+    () => { S.offline = true; S.onData && S.onData(); }
+  );
+  S.db.collection('portal').onSnapshot(
+    (snap) => {
+      S.portals = {};
+      snap.docs.forEach((d) => { S.portals[d.id] = d.data(); });
+      if (!snap.metadata.fromCache) { S.portalLoaded = true; S.portalErr = false; }
+      S.onData && S.onData();
+    },
+    () => { S.portalLoaded = true; S.portalErr = true; S.onData && S.onData(); }
+  );
+  S.db.collection('comunicados').onSnapshot(
+    (snap) => {
+      S.coms = snap.docs.map((d) => ({ ...d.data(), id: d.id }));
+      if (!snap.metadata.fromCache) { S.comLoaded = true; S.comErr = false; }
+      S.onData && S.onData();
+    },
+    () => { S.comLoaded = true; S.comErr = true; S.onData && S.onData(); }
+  );
+}
+
+/* Campo de contraseña con ojo: ojo abierto = se puede ver; ojo tachado = oculta. */
+function passField(input) {
+  const btn = el('button', { class: 'pw-btn', type: 'button' });
+  const paint = () => {
+    const shown = input.type === 'text';
+    btn.replaceChildren(icon(shown ? 'eye' : 'eyeoff'));
+    btn.setAttribute('aria-label', shown ? t('hidePw') : t('showPw'));
+    btn.setAttribute('aria-pressed', String(shown));
+  };
+  btn.addEventListener('click', () => { input.type = input.type === 'password' ? 'text' : 'password'; paint(); input.focus(); });
+  paint();
+  return el('span', { class: 'pw' }, input, btn);
+}
+
+/* ---------------- Pantalla de acceso ---------------- */
+function renderAuth(tab = 'login') {
+  S.onData = null;
+  S.view = () => renderAuth(tab);
+  const panel = el('div', { class: 'card' });
+  app.replaceChildren(el('div', { class: 'auth' },
+    el('aside', { class: 'brand' }, emblem(),
+      el('div', { class: 'titles' },
+        el('div', { class: 'kicker' }, t('state')),
+        el('h1', {}, el('span', { class: 'gold' }, t('titleLead')), t('titleRest'))),
+      el('div', { class: 'rule' }),
+      el('p', {}, t('brandP'))),
+    el('main', { class: 'panel' }, langSwitch(), panel)));
+
+  const say = (box, kind, text) => box.replaceChildren(text ? el('div', { class: 'msg ' + kind, role: kind === 'error' ? 'alert' : 'status' }, text) : '');
+  const connLine = () => {
+    const ok = S.loaded && !S.offline;
+    const text = S.noDb ? t('connNoDb') : ok ? t('connOk') : S.offline ? t('connOffline') : t('connWait');
+    return el('div', { class: 'status-line' }, el('span', { class: 'dot' + (ok ? ' on' : '') }), el('span', {}, text));
+  };
+
+  function draw() {
+    S.onData = null;
+    panel.replaceChildren(
+      el('div', { class: 'tabs', role: 'tablist' },
+        el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === 'login'), onclick: () => { tab = 'login'; draw(); } }, t('tabLogin')),
+        el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === 'register'), onclick: () => { tab = 'register'; draw(); } }, t('tabRegister'))),
+      tab === 'login' ? loginForm() : registerForm());
+  }
+
+  function loginForm() {
+    const box = el('div');
+    const placa = el('input', { id: 'l-placa', class: 'mono', required: true, maxlength: '10', autocomplete: 'username', autocapitalize: 'characters' });
+    const pass = el('input', { id: 'l-pass', type: 'password', required: true, maxlength: '128', autocomplete: 'current-password' });
+    const btn = el('button', { class: 'btn', type: 'submit' }, t('btnEnter'));
+    const status = el('div');
+    const refresh = () => { btn.disabled = !S.loaded; status.replaceChildren(connLine()); };
+    refresh(); S.onData = refresh;
+    return el('form', {
+      novalidate: true,
+      onsubmit: async (e) => {
+        e.preventDefault();
+        if (!S.loaded) return;
+        btn.disabled = true; say(box, 'error', '');
+        const p = placa.value.trim().toUpperCase();
+        const row = rowByPlaca(p);
+        try {
+          const salt = row && row.salt ? unb64(row.salt) : crypto.getRandomValues(new Uint8Array(16));
+          const h = await derive(pass.value.slice(0, 128), salt);
+          if (!row || h !== row.hash) { say(box, 'error', t('errLogin')); btn.disabled = false; return; }
+          if (row.estado === 'pendiente') { say(box, 'warn', t('errPending')); btn.disabled = false; return; }
+          if (row.estado === 'rechazado') { say(box, 'error', t('errDenied') + (row.motivo ? t('motive') + row.motivo : '') + t('retry')); btn.disabled = false; return; }
+          store.set(p); renderDashboard(p);
+        } catch (err) { say(box, 'error', err.message || t('errLoginGeneric')); btn.disabled = false; }
+      },
+    }, box,
+      el('label', { for: 'l-placa' }, t('lblPlaca'), placa),
+      el('label', { for: 'l-pass' }, t('lblPass'), passField(pass)),
+      btn, status);
+  }
+
+  function registerForm() {
+    const box = el('div');
+    const f = {
+      dni: el('input', { id: 'r-dni', class: 'mono', required: true, maxlength: '9', placeholder: '12345678Z', autocomplete: 'off', autocapitalize: 'characters' }),
+      nombres: el('input', { id: 'r-nombres', required: true, maxlength: '100', autocomplete: 'off' }),
+      placa: el('input', { id: 'r-placa', class: 'mono', required: true, maxlength: '10', autocomplete: 'off', autocapitalize: 'characters' }),
+      rango: el('select', { id: 'r-rango', required: true }, el('option', { value: '' }, t('phRango')),
+        GROUPS.map((g) => el('optgroup', { label: rankLabel(g.name) }, g.ranks.map((r) => el('option', { value: r }, rankLabel(r)))))),
+      pass: el('input', { id: 'r-pass', type: 'password', required: true, minlength: '8', maxlength: '128', autocomplete: 'new-password' }),
+      pass2: el('input', { id: 'r-pass2', type: 'password', required: true, minlength: '8', maxlength: '128', autocomplete: 'new-password' }),
+    };
+    const btn = el('button', { class: 'btn', type: 'submit' }, t('btnRegister'));
+    const status = el('div');
+    const refresh = () => { btn.disabled = !S.loaded || S.canWrite === false; status.replaceChildren(connLine()); };
+    refresh(); S.onData = refresh;
+    if (S.canWrite === false) say(box, 'warn', t('readOnly'));
+
+    return el('form', {
+      novalidate: true,
+      onsubmit: async (e) => {
+        e.preventDefault();
+        say(box, 'error', '');
+        const dni = f.dni.value.trim().toUpperCase();
+        const nombres = f.nombres.value.trim().replace(/\s+/g, ' ');
+        const placa = f.placa.value.trim().toUpperCase();
+        const rango = f.rango.value;
+        const pw = f.pass.value;
+        if (!/^\d{8}[A-Z]$/.test(dni)) return say(box, 'error', t('vDni'));
+        if (!/^[\p{L}][\p{L}\s'.-]{2,99}$/u.test(nombres)) return say(box, 'error', t('vNombres'));
+        if (!/^[A-Z0-9]{3,10}$/.test(placa)) return say(box, 'error', t('vPlaca'));
+        if (!TIER.has(rango)) return say(box, 'error', t('vRango'));
+        if (pw.length < 8 || pw.length > 128) return say(box, 'error', t('vPass'));
+        if (pw !== f.pass2.value) return say(box, 'error', t('vPass2'));
+        if (!S.loaded) return;
+
+        btn.disabled = true;
+        try {
+          if (S.rows.some((r) => (r.dni === dni || r.placa === placa) && r.estado !== 'rechazado')) {
+            say(box, 'error', t('vDup')); btn.disabled = false; return;
+          }
+          // Un registro denegado se puede volver a presentar: se sustituye el anterior.
+          for (const r of S.rows.filter((x) => x.dni === dni && x.placa !== placa && x.estado === 'rechazado')) await personalRef(r.placa).delete();
+
+          const bootstrap = S.rows.length === 0 && TIER.get(rango) === 4;
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const hash = await derive(pw, salt);
+          const now = new Date().toISOString();
+          await personalRef(placa).set({
+            dni, nombres, placa, rango, salt: b64(salt), hash,
+            estado: bootstrap ? 'aprobado' : 'pendiente', creado: now,
+            resueltoPor: bootstrap ? 'Arranque del sistema' : null, resueltoEn: bootstrap ? now : null, motivo: null,
+          });
+          if (bootstrap) { store.set(placa); return renderDashboard(placa); }
+          S.onData = null;
+          S.view = () => renderAuth('login');
+          panel.replaceChildren(el('div', { class: 'done' },
+            el('h2', {}, t('sentTitle')),
+            el('p', {}, t('sentText')),
+            el('button', { class: 'btn', type: 'button', onclick: () => { tab = 'login'; draw(); S.view = () => renderAuth(tab); } }, t('toLogin'))));
+        } catch (err) {
+          say(box, 'error', err && err.code === 'invalid_argument' ? t('noWrite') : (err.message || t('errRegister')));
+          btn.disabled = false;
+        }
+      },
+    }, box,
+      el('label', { for: 'r-dni' }, t('lblDni'), f.dni, el('span', { class: 'hint' }, t('hintDni'))),
+      el('label', { for: 'r-nombres' }, t('lblNombres'), f.nombres),
+      el('label', { for: 'r-placa' }, t('lblPlaca'), f.placa),
+      el('label', { for: 'r-rango' }, t('lblRango'), f.rango),
+      el('label', { for: 'r-pass' }, t('lblPass'), passField(f.pass), el('span', { class: 'hint' }, t('hintPass'))),
+      el('label', { for: 'r-pass2' }, t('lblPass2'), passField(f.pass2)),
+      btn, status);
+  }
+
+  draw();
+}
+
+/* ---------------- Panel interno ---------------- */
+const ICONS = {
+  eye: [['path', { d: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z' }], ['circle', { cx: 12, cy: 12, r: 3 }]],
+  eyeoff: [['path', { d: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z' }], ['circle', { cx: 12, cy: 12, r: 3 }], ['path', { d: 'M4 4l16 16' }]],
+  portal: [['rect', { x: 3, y: 5, width: 18, height: 14, rx: 2 }], ['circle', { cx: 9, cy: 11, r: 2 }], ['path', { d: 'M5.5 16.5c.5-1.5 1.8-2.5 3.5-2.5s3 1 3.5 2.5M14 10h4M14 14h4' }]],
+  personal: [['circle', { cx: 9, cy: 8, r: 3 }], ['path', { d: 'M3 19c0-3 3-5 6-5s6 2 6 5' }], ['circle', { cx: 17, cy: 9, r: 2.5 }], ['path', { d: 'M17 14c2.5 0 4 1.5 4 4' }]],
+  unidades: [['path', { d: 'M5 21V4M5 5h11l-2 3.5 2 3.5H5' }]],
+  historial: [['path', { d: 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5' }]],
+  comunicados: [['path', { d: 'M4 10v4h3l7 4V6L7 10zM17 9c1.5 1 1.5 5 0 6' }]],
+};
+function icon(name) {
+  const s = svg({ class: 'ico', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.6', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' });
+  for (const [tag, attrs] of ICONS[name]) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+    s.append(n);
+  }
+  return s;
+}
+/* Una opción activa es un botón; una que aún no existe se muestra apagada con la etiqueta "Próximamente". */
+function tile(ic, name, desc, onclick) {
+  return onclick
+    ? el('button', { class: 'tile', type: 'button', onclick }, icon(ic), el('span', { class: 't-name' }, name), el('span', { class: 't-desc' }, desc))
+    : el('div', { class: 'tile off', 'aria-disabled': 'true' }, icon(ic), el('span', { class: 't-name' }, name), el('span', { class: 'badge' }, t('soonTitle')));
+}
+
+function fmtDay(iso) {
+  const [y, m, d] = String(iso || '').split('-');
+  return y && m && d ? d.padStart(2, '0') + '/' + m.padStart(2, '0') + '/' + y : '—';
+}
+const yn = (v) => (v ? t('yes') : t('no'));
+
+/* Portal del Funcionario: ficha de un agente. Los datos de cuenta (nombre, rango, DNI) salen de su registro; el resto, de portal/<placa>. */
+function portalView(me) {
+  const body = el('div', { class: 'portal' });
+  const row = (k, v, extra) => el('div', { class: 'field' + (extra ? ' ' + extra : '') }, el('div', { class: 'k' }, k), el('div', { class: 'v' + (extra === 'mono' ? ' mono' : '') }, v));
+  const sec = (title, rows) => el('section', { class: 'section' }, el('h2', {}, title), el('div', { class: 'profile' }, rows));
+
+  function refresh() {
+    if (!S.portalLoaded) return body.replaceChildren(el('div', { class: 'empty' }, t('portalLoading')));
+    if (S.portalErr) return body.replaceChildren(el('div', { class: 'empty' }, t('portalErr')));
+    const p = S.portals[me.placa];
+    if (!p) return body.replaceChildren(el('div', { class: 'empty' }, t('portalNone')));
+    const d = p.disciplinario || {}, j = p.judicial || {}, pe = p.personal || {};
+    const foto = /^[\w.-]+\.(png|jpe?g|webp)$/i.test(String(p.foto || '')) ? p.foto : null;
+    const main = [
+      row(t('rAgente'), me.nombres),
+      row(t('rPlaca'), me.placa.split('').join('-'), 'mono'),
+      row(t('rRango'), rankLabel(me.rango)),
+      row(t('rIngreso'), fmtDay(p.ingreso)),
+      row(t('rUnidades'), (Array.isArray(p.unidades) && p.unidades.length ? p.unidades.join(', ') : '—'), 'wide'),
+    ];
+    body.replaceChildren(
+      el('section', { class: 'section hero-card' },
+        foto && el('figure', { class: 'portrait' }, el('img', { src: foto, alt: t('portraitAlt') }), el('figcaption', {}, t('portraitCap'))),
+        el('div', { class: 'hero-data' }, el('h2', {}, t('secMain')), el('div', { class: 'profile' }, main))),
+      sec(t('secDisc'), [
+        row(t('rWarn'), (d.leves ?? 0) + ' ' + t('lLeves') + ', ' + (d.graves ?? 0) + ' ' + t('lGraves')),
+        row(t('rAsc'), (d.ascensos ?? 0) + ' ' + t('lAsc')),
+        row(t('rDesc'), (d.descensos ?? 0) + ' ' + t('lDesc')),
+        row(t('rTraspaso'), yn(d.traspaso) + (d.traspaso && d.traspasoDe ? ' · ' + d.traspasoDe : '')),
+        row(t('rJunta'), yn(d.juntaSuperior)),
+        row(t('rSuperv'), yn(d.supervision)),
+        row(t('rExped'), yn(d.expedientes)),
+        row(t('rGravedad'), d.gravedad || 'N/A', 'sub'),
+      ]),
+      sec(t('secJud'), [row(t('rDemandado'), yn(j.demandado)), row(t('rCausas'), yn(j.causasAbiertas))]),
+      sec(t('secPers'), [
+        row(t('rEstado'), pe.estadoLegal || '—'),
+        row(t('rEdad'), pe.edad != null ? String(pe.edad) : '—'),
+        row(t('rNacimiento'), pe.nacimiento || '—'),
+        row(t('rDniNum'), me.dni, 'mono'),
+      ]));
+  }
+  refresh();
+  return { node: body, refresh };
+}
+
+const longDay = (iso) => {
+  const [y, m, d] = String(iso || '').split('-').map(Number);
+  return y && m && d ? new Date(y, m - 1, d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+};
+
+/* Comunicados: los ve todo el personal; solo los administradores los publican (colección "comunicados"). */
+function comunicadosView() {
+  const body = el('div', { class: 'portal' });
+  const msg = (text) => body.replaceChildren(el('div', { class: 'empty' }, text));
+  const snippet = (c) => {
+    const first = (Array.isArray(c.cuerpo) ? c.cuerpo : []).find((b) => b && b.t === 'p' && String(b.x || '').length > 80);
+    const x = first ? String(first.x) : '';
+    return x.length > 190 ? x.slice(0, 187).trimEnd() + '…' : x;
+  };
+  function refresh() {
+    if (!S.comLoaded) return msg(t('comLoading'));
+    if (S.comErr) return msg(t('comErr'));
+    const list = S.coms.slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    if (!list.length) return msg(t('comEmpty'));
+    const open = S.openCom && list.find((c) => c.id === S.openCom);
+    if (open) {
+      const blocks = (Array.isArray(open.cuerpo) ? open.cuerpo : []).map((b) => {
+        if (b && b.t === 'ul') return el('ul', {}, (Array.isArray(b.items) ? b.items : []).map((i) => el('li', {}, el('strong', {}, String(i.b || '')), i.x ? ': ' + i.x : '')));
+        return el('p', {}, String((b && b.x) || ''));
+      });
+      return body.replaceChildren(el('article', { class: 'section com-article' },
+        el('div', { class: 'kicker' }, t('comOfficial')),
+        el('h2', {}, open.titulo || ''),
+        el('div', { class: 'com-meta' }, el('span', {}, longDay(open.fecha)), open.autor && el('span', {}, t('comBy') + ' ' + open.autor)),
+        el('div', { class: 'com-text' }, blocks, open.autor && el('p', { class: 'com-sign' }, open.autor))));
+    }
+    body.replaceChildren(el('div', { class: 'list' }, list.map((c) => el('button', {
+      class: 'com-card', type: 'button', onclick: () => { S.openCom = c.id; S.view(); window.scrollTo(0, 0); },
+    },
+      el('div', { class: 'com-meta' }, el('span', { class: 'kicker' }, t('comOfficial')), el('span', { class: 'mono' }, fmtDay(c.fecha)), c.autor && el('span', {}, c.autor)),
+      el('h3', {}, c.titulo || ''),
+      snippet(c) && el('p', { class: 'com-snip' }, snippet(c)),
+      el('span', { class: 'badge' }, t('comRead'))))));
+  }
+  refresh();
+  return { node: body, refresh };
+}
+
+function renderDashboard(placa) {
+  const me = rowByPlaca(placa);
+  if (!me || me.estado !== 'aprobado') { store.set(null); return renderAuth('login'); }
+  S.view = () => renderDashboard(placa);
+  const go = (page) => { S.page = page; S.openCom = null; renderDashboard(placa); window.scrollTo(0, 0); };
+
+  let refreshApprovals = null;
+  let content;
+  if (S.page === 'portal') {
+    const pv = portalView(me);
+    refreshApprovals = pv.refresh;
+    content = [
+      el('button', { class: 'btn ghost small back', type: 'button', onclick: () => go('home') }, t('back')),
+      el('div', { class: 'hero' }, el('h2', {}, t('portalTitle')), el('p', { class: 'lead' }, t('portalDesc'))),
+      pv.node,
+    ];
+  } else if (S.page === 'comunicados') {
+    const cv = comunicadosView();
+    refreshApprovals = cv.refresh;
+    const inDetail = !!S.openCom;
+    content = [
+      el('button', { class: 'btn ghost small back', type: 'button', onclick: inDetail ? () => { S.openCom = null; renderDashboard(placa); window.scrollTo(0, 0); } : () => go('home') }, inDetail ? t('comBack') : t('back')),
+      !inDetail && el('div', { class: 'hero' }, el('h2', {}, t('comTitle')), el('p', { class: 'lead' }, t('comDesc'))),
+      cv.node,
+    ];
+  } else {
+    content = [
+      el('div', { class: 'hero' }, el('h2', {}, t('homeTitle')), el('p', { class: 'lead' }, t('homeLead'))),
+      el('div', { class: 'modules' },
+        tile('portal', t('portalTitle'), t('portalDesc'), () => go('portal')),
+        tile('personal', t('soon1')), tile('unidades', t('soon2')), tile('historial', t('soon3')), tile('comunicados', t('comTitle'), t('comDesc'), () => go('comunicados'))),
+    ];
+    if (isApprover(me.rango) || me.admin) {
+      const a = approvalsSection(me);
+      content.push(a.node); refreshApprovals = a.refresh;
+    }
+  }
+
+  app.replaceChildren(
+    el('header', { class: 'topbar' },
+      el('div', { class: 'id' }, emblem(), el('div', {},
+        el('div', { class: 'kicker' }, t('titleLead') + ' CNP · ' + t('state')),
+        el('div', { class: 'name' }, rankLabel(me.rango) + ' · ' + me.nombres))),
+      el('div', { class: 'top-actions' }, langSwitch(),
+        el('button', { class: 'btn ghost small', type: 'button', onclick: () => { store.set(null); S.page = 'home'; S.openCom = null; renderAuth('login'); } }, t('logout')))),
+    el('main', { class: 'wrap' }, content));
+  S.onData = refreshApprovals;
+}
+
+function approvalsSection(me) {
+  const list = el('div', { class: 'list' });
+  const status = el('div');
+  const flash = (kind, text) => status.replaceChildren(el('div', { class: 'msg ' + kind, role: kind === 'error' ? 'alert' : 'status' }, text));
+  const node = el('section', { class: 'section' },
+    el('h2', {}, t('pendTitle')),
+    el('p', { class: 'lead' }, t('pendLead')),
+    status, list);
+
+  async function resolve(r, estado, motivo) {
+    try {
+      await personalRef(r.placa).update({
+        estado, motivo: estado === 'rechazado' ? (motivo || '').trim().slice(0, 200) || null : null,
+        resueltoPor: me.rango + ' ' + me.nombres + ' (' + me.placa + ')', resueltoEn: new Date().toISOString(),
+      });
+      flash('success', estado === 'aprobado' ? t('okApprove') : t('okDeny'));
+    } catch (err) {
+      flash('error', err && err.code === 'invalid_argument' ? t('noWrite') : (err.message || t('errSave')));
+      shown = ''; refresh();
+    }
+  }
+
+  function card(r) {
+    const actions = el('div', { class: 'actions' });
+    const buttons = () => actions.replaceChildren(
+      el('button', { class: 'btn ok small', type: 'button', onclick: (e) => { e.target.disabled = true; resolve(r, 'aprobado'); } }, t('approve')),
+      el('button', { class: 'btn bad small', type: 'button', onclick: deny }, t('deny')));
+    const deny = () => {
+      const motivo = el('input', { maxlength: '200', placeholder: t('motivePh'), 'aria-label': t('motiveAria') });
+      actions.replaceChildren(el('div', { class: 'deny-box' }, motivo, el('div', { class: 'actions' },
+        el('button', { class: 'btn bad small', type: 'button', onclick: (e) => { e.target.disabled = true; resolve(r, 'rechazado', motivo.value); } }, t('confirmDeny')),
+        el('button', { class: 'btn ghost small', type: 'button', onclick: buttons }, t('cancel')))));
+      motivo.focus();
+    };
+    buttons();
+    return el('article', { class: 'req', 'data-placa': r.placa },
+      el('div', { class: 'head' }, el('span', { class: 'who' }, r.nombres), el('span', { class: 'badge' }, rankLabel(r.rango))),
+      el('div', { class: 'meta' }, el('span', { class: 'mono' }, t('placa') + ' ' + r.placa), el('span', { class: 'mono' }, t('dni') + ' ' + r.dni), el('span', {}, t('requested') + ' ' + fmtDate(r.creado))),
+      actions);
+  }
+
+  let shown = '';
+  function refresh() {
+    const pend = S.rows.filter((r) => r.estado === 'pendiente' && (me.admin || canResolve(me.rango, r.rango))).sort((a, b) => String(a.creado).localeCompare(String(b.creado)));
+    const key = pend.map((r) => r.placa).join('|');
+    if (key === shown) return; // no tocar el DOM si la lista no cambió (conserva lo que se está escribiendo)
+    shown = key;
+    list.replaceChildren(...(pend.length ? pend.map(card) : [el('div', { class: 'empty' }, t('pendEmpty'))]));
+  }
+  refresh();
+  return { node, refresh };
+}
+
+/* ---------------- Arranque ---------------- */
+(function init() {
+  syncChrome();
+  const splash = () => app.replaceChildren(el('div', { class: 'splash' }, emblem(), el('div', {}, t('splash'))));
+  S.view = splash;
+  splash();
+  S.onData = () => {
+    if (S.noDb) { S.onData = null; return renderAuth('login'); }
+    if (!S.loaded) { if (S.offline) { S.onData = null; renderAuth('login'); } return; }
+    const saved = store.get();
+    S.onData = null;
+    if (saved && rowByPlaca(saved) && rowByPlaca(saved).estado === 'aprobado') renderDashboard(saved);
+    else renderAuth('login');
+  };
+  connect().catch(() => { S.offline = true; S.noDb = true; S.onData && S.onData(); });
+})();
+</script>
+
+</body></html>
